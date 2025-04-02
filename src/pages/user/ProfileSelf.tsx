@@ -7,7 +7,7 @@ import {
   TextField,
   Typography,
 } from "@mui/material";
-import React, { useState } from "react";
+import React, { useCallback, useState } from "react";
 import { Profile, User } from "../../features/user/userTypes";
 import { useNavigate } from "react-router-dom";
 import { updateProile } from "../../features/user/userAPIs";
@@ -15,6 +15,21 @@ import { setMessage } from "../../features/message/messagSlice";
 import { useAppDispatch } from "../../hooks/useAppDispatch";
 import { useAppSelector } from "../../hooks/useAppSelector";
 import { updateProfile } from "../../features/user/userSlice";
+
+const tvalid = (profileForm: Profile) => {
+  const error: any = {};
+  if (!profileForm.name) error.name = "Name is Required";
+  if (Number(profileForm.calorie) < 1)
+    error.calorie = "Calorie must be at least 1";
+
+  if (profileForm.password_confirm !== profileForm.password)
+    error.password_confirm = "Password does not match";
+  if (profileForm.password.length > 0 && profileForm.password.length < 3)
+    error.password = "Password must be at least 3 charactors";
+  if (profileForm.name.length < 3) error.name = "Name must be 3 charactors";
+
+  return Object.keys(error).length ? error : null;
+};
 
 export default function ProfileSelf() {
   const dispatch = useAppDispatch();
@@ -38,52 +53,35 @@ export default function ProfileSelf() {
 
   const navigate = useNavigate();
 
-  const validateProfileFrom = () => {
-    if (!form.name) setError((prev) => ({ ...prev, name: "Name is Required" }));
-    if (Number(form.calorie) < 1)
-      setError((prev) => ({ ...prev, calorie: "Calorie must be at least 1" }));
-
-    if (form.password_confirm !== form.password)
-      setError((prev) => ({
-        ...prev,
-        passowrd_confirm: "Passowrd does not match",
-      }));
-    if (form.name.length < 3)
-      setError((prev) => ({ ...prev, name: "Name must be 3 charactors" }));
-
-    return !(!!error.password_confirm || !!error.name || !!error.calorie);
-  };
-
   const handleInputForm = (e: React.ChangeEvent<HTMLInputElement>) => {
     setError((prev) => ({ ...prev, [e.target.name]: "" }));
     setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
   };
 
-  const handleUpdate = async () => {
-    validateProfileFrom();
-    if (validateProfileFrom()) {
-      try {
-        const response = await updateProile(form);
-        console.log(response.data.user);
-        dispatch(updateProfile(response.data.user as User));
+  const handleUpdate = useCallback(async () => {
+    const error = tvalid(form);
+    if (error) return setError(error);
+    try {
+      const response = await updateProile(form);
+      console.log(response.data.user);
+      dispatch(updateProfile(response.data.user as User));
 
-        dispatch(
-          setMessage({
-            type: "success",
-            message: "Profile updated successfully.",
-          })
-        );
-        navigate("/login");
-      } catch (error: any) {
-        dispatch(
-          setMessage({
-            type: "warning",
-            message: error,
-          })
-        );
-      }
+      dispatch(
+        setMessage({
+          type: "success",
+          message: "Profile updated successfully.",
+        })
+      );
+      navigate("/login");
+    } catch (error: any) {
+      dispatch(
+        setMessage({
+          type: "warning",
+          message: error,
+        })
+      );
     }
-  };
+  }, [error]);
 
   return (
     <Container maxWidth="sm">
@@ -140,7 +138,7 @@ export default function ProfileSelf() {
           sx={{ width: "100%", margin: 2 }}
           label="Confirm"
           type="password"
-          name="passowrd_confirm"
+          name="password_confirm"
           value={form.password_confirm}
           onChange={handleInputForm}
           error={!!error.password_confirm}

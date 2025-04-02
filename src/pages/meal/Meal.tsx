@@ -374,8 +374,6 @@ export default function MyTable() {
     },
   ];
 
-  console.log(rows);
-
   const [open, setOpen] = useState<boolean>(false);
 
   return (
