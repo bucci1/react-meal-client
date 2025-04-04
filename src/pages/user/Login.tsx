@@ -35,29 +35,35 @@ const LoginPage: React.FC = () => {
 
   const [form, setForm] = useState<LoginForm>({ email: "", password: "" });
   const [error, setError] = useState<Partial<LoginForm>>({});
+  const [isLogging, setIsLogging] = useState<boolean>(false);
 
   const handleLogin = useCallback(async () => {
-    const errors = validateLoginForm(form);
-    if (errors) return setError(errors);
+    if (!isLogging) {
+      const errors = validateLoginForm(form);
+      if (errors) return setError(errors);
+      setIsLogging(true);
 
-    try {
-      const loginRes = await loginUserApi(form);
-      saveAuthtoken(loginRes?.token);
-      const user = decodeToken(loginRes?.token);
-      saveUserState({ user, isLoggedin: true, loading: false, users: [] });
+      try {
+        const loginRes = await loginUserApi(form);
+        setIsLogging(false);
+        saveAuthtoken(loginRes?.token);
+        const user = decodeToken(loginRes?.token);
+        saveUserState({ user, isLoggedin: true, loading: false, users: [] });
 
-      dispatch(loginUser(user));
-      dispatch(
-        setMessage({ type: "success", message: "Logged in successfully." })
-      );
-      navigate("/meal");
-    } catch (error: any) {
-      dispatch(
-        setMessage({
-          type: "warning",
-          message: error.message || error,
-        })
-      );
+        dispatch(loginUser(user));
+        dispatch(
+          setMessage({ type: "success", message: "Logged in successfully." })
+        );
+        navigate("/meal");
+      } catch (error: any) {
+        dispatch(
+          setMessage({
+            type: "warning",
+            message: error.message || error,
+          })
+        );
+        setIsLogging(false);
+      }
     }
   }, [form, dispatch, navigate]);
 
@@ -110,6 +116,7 @@ const LoginPage: React.FC = () => {
           fullWidth
           sx={{ mt: 2 }}
           onClick={handleLogin}
+          disabled={isLogging}
         >
           Login
         </Button>

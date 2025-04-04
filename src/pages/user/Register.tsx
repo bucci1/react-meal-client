@@ -19,7 +19,7 @@ const isValidEmail = (email: string): boolean =>
 export default function Register() {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
-
+  const [isRegistering, setIsRegistering] = useState<boolean>(false);
   const [form, setForm] = useState<RegisterForm>({
     name: "",
     email: "",
@@ -62,7 +62,7 @@ export default function Register() {
 
   const handleRegister = useCallback(async () => {
     if (!validateRegisterForm()) return;
-
+    setIsRegistering(true);
     try {
       await registerUser(form);
       dispatch(
@@ -76,6 +76,7 @@ export default function Register() {
           message: error?.message || "Registration failed.",
         })
       );
+      setIsRegistering(false);
     }
   }, [form]);
 
@@ -118,7 +119,12 @@ export default function Register() {
         ))}
 
         <ButtonGroup fullWidth sx={{ mt: 2 }}>
-          <Button variant="contained" color="success" onClick={handleRegister}>
+          <Button
+            variant="contained"
+            color="success"
+            onClick={handleRegister}
+            disabled={isRegistering}
+          >
             Register
           </Button>
           <Button

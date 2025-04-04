@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import AddIcon from "@mui/icons-material/Add";
@@ -183,17 +183,20 @@ export default function MyTable() {
     } catch (error) {}
   };
 
-  const handleCancelClick = (id: GridRowId) => () => {
-    setRowModesModel({
-      ...rowModesModel,
-      [id]: { mode: GridRowModes.View, ignoreModifications: true },
-    });
+  const handleCancelClick = useCallback(
+    (id: GridRowId) => () => {
+      setRowModesModel({
+        ...rowModesModel,
+        [id]: { mode: GridRowModes.View, ignoreModifications: true },
+      });
 
-    const editedRow = rows.find((row) => row.id === id);
-    if (editedRow!.isNew) {
-      setRows(rows.filter((row) => row.id !== id));
-    }
-  };
+      const editedRow = rows.find((row) => row.id === id);
+      if (editedRow!.isNew) {
+        setRows(rows.filter((row) => row.id !== id));
+      }
+    },
+    [rows]
+  );
 
   const isExist = (newRow: Meal) => {
     const formatDate = (date: Date): string =>
